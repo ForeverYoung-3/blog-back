@@ -10,7 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy source to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "."
+          target: "~/blog-back"
+          rm: true
+
+      - name: Build and deploy on server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -18,16 +31,8 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           command_timeout: 30m
           script: |
-            # 拉取最新代码
-            if [ ! -d ~/blog-back ]; then
-              git clone https://github.com/ForeverYoung-3/blog-back.git ~/blog-back
-            else
-              cd ~/blog-back && git pull
-            fi
             cd ~/blog-back
-            # 在服务器本地构建镜像
             docker build -t blog-back:latest .
-            # 重启服务
             cd ~/blog
             docker compose up -d blog-back
             docker image prune -f
