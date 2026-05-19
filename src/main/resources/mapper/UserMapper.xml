@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.blog.back.mapper.UserMapper">
+
+    <!-- ==================== ResultMap ==================== -->
+    <resultMap id="UserResultMap" type="com.blog.back.entity.User">
+        <id     column="id"         property="id"/>
+        <result column="username"   property="username"/>
+        <result column="email"      property="email"/>
+        <result column="password"   property="password"/>
+        <result column="nickname"   property="nickname"/>
+        <result column="avatar"     property="avatar"/>
+        <result column="bio"        property="bio"/>
+        <result column="role"       property="role"
+                typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result column="enabled"    property="enabled"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <!-- ==================== 公共列片段 ==================== -->
+    <sql id="Base_Column_List">
+        id, username, email, password, nickname, avatar, bio, role, enabled, created_at, updated_at
+    </sql>
+
+    <!-- ==================== 插入 ==================== -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (username, email, password, nickname, avatar, bio, role, enabled, created_at, updated_at)
+        VALUES (#{username}, #{email}, #{password}, #{nickname}, #{avatar}, #{bio},
+                #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                #{enabled}, NOW(), NOW())
+    </insert>
+
+    <!-- ==================== 更新（只更新非 null 字段） ==================== -->
+    <update id="updateById">
+        UPDATE users
+        <set>
+            <if test="nickname  != null">nickname  = #{nickname},</if>
+            <if test="email     != null">email     = #{email},</if>
+            <if test="avatar    != null">avatar    = #{avatar},</if>
+            <if test="bio       != null">bio       = #{bio},</if>
+            <if test="role      != null">role      = #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
+            <if test="enabled   != null">enabled   = #{enabled},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- ==================== 删除 ==================== -->
+    <delete id="deleteById">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+
+    <!-- ==================== 查询 ==================== -->
+    <select id="findById" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE username = #{username}
+        LIMIT 1
+    </select>
+
+    <select id="findByEmail" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE email = #{email}
+        LIMIT 1
+    </select>
+
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- ==================== 存在性检查 ==================== -->
+    <select id="existsByUsername" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM users WHERE username = #{username}
+    </select>
+
+    <select id="existsByEmail" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM users WHERE email = #{email}
+    </select>
+
+    <!-- ==================== 统计 ==================== -->
+    <select id="count" resultType="long">
+        SELECT COUNT(1) FROM users
+    </select>
+
+    <select id="countPostsByUserId" resultType="long">
+        SELECT COUNT(1) FROM posts WHERE author_id = #{userId}
+    </select>
+
+</mapper>

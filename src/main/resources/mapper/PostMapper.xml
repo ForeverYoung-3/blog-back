@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.blog.back.mapper.PostMapper">
+
+    <!-- ==================== ResultMap ==================== -->
+    <!-- 基础 ResultMap（含作者信息，不含标签） -->
+    <resultMap id="PostResultMap" type="com.blog.back.entity.Post">
+        <id     column="id"           property="id"/>
+        <result column="title"        property="title"/>
+        <result column="slug"         property="slug"/>
+        <result column="summary"      property="summary"/>
+        <result column="content"      property="content"/>
+        <result column="cover_image"  property="coverImage"/>
+        <result column="status"       property="status"
+                typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result column="pinned"       property="pinned"/>
+        <result column="view_count"   property="viewCount"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="author_id"    property="authorId"/>
+        <result column="created_at"   property="createdAt"/>
+        <result column="updated_at"   property="updatedAt"/>
+        <!-- JOIN 查询填充的作者字段 -->
+        <result column="author_name"   property="authorName"/>
+        <result column="author_avatar" property="authorAvatar"/>
+    </resultMap>
+
+    <!-- ==================== 公共 SQL 片段 ==================== -->
+    <!-- 文章列表查询（JOIN 作者，不含 content 大字段） -->
+    <sql id="Select_List_Columns">
+        p.id, p.title, p.slug, p.summary, p.cover_image, p.status, p.pinned,
+        p.view_count, p.published_at, p.author_id, p.created_at, p.updated_at,
+        u.nickname AS author_name, u.avatar AS author_avatar
+    </sql>
+
+    <!-- 文章详情查询（含 content） -->
+    <sql id="Select_Detail_Columns">
+        p.id, p.title, p.slug, p.summary, p.content, p.cover_image, p.status, p.pinned,
+        p.view_count, p.published_at, p.author_id, p.created_at, p.updated_at,
+        u.nickname AS author_name, u.avatar AS author_avatar
+    </sql>
+
+    <!-- ==================== 插入 ==================== -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO posts (title, slug, summary, content, cover_image, status, pinned,
+                           view_count, published_at, author_id, created_at, updated_at)
+        VALUES (#{title}, #{slug}, #{summary}, #{content}, #{coverImage},
+                #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                #{pinned}, #{viewCount}, #{publishedAt}, #{authorId}, NOW(), NOW())
+    </insert>
+
+    <!-- ==================== 更新（只更新非 null 字段） ==================== -->
+    <update id="updateById">
+        UPDATE posts
+        <set>
+            <if test="title       != null">title        = #{title},</if>
+            <if test="slug        != null">slug         = #{slug},</if>
+            <if test="summary     != null">summary      = #{summary},</if>
+            <if test="content     != null">content      = #{content},</if>
+            <if test="coverImage  != null">cover_image  = #{coverImage},</if>
+            <if test="status      != null">status       = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
+            <if test="pinned      != null">pinned       = #{pinned},</if>
+            <if test="publishedAt != null">published_at = #{publishedAt},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- ==================== 删除 ==================== -->
+    <delete id="deleteById">
+        DELETE FROM posts WHERE id = #{id}
+    </delete>
+
+    <!-- ==================== 详情查询（含 content） ==================== -->
+    <select id="findById" resultMap="PostResultMap">
+        SELECT <include refid="Select_Detail_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        WHERE p.id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findBySlug" resultMap="PostResultMap">
+        SELECT <include refid="Select_Detail_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        WHERE p.slug = #{slug}
+        LIMIT 1
+    </select>
+
+    <!-- ==================== 列表查询（不含 content，由 PageHelper 分页） ==================== -->
+    <select id="findByStatus" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        WHERE p.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        ORDER BY p.pinned DESC, p.published_at DESC, p.created_at DESC
+    </select>
+
+    <select id="findByAuthorId" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        WHERE p.author_id = #{authorId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="findByAuthorIdAndStatus" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        WHERE p.author_id = #{authorId}
+          AND p.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="findByTagSlugAndStatus" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        INNER JOIN post_tags pt ON p.id = pt.post_id
+        INNER JOIN tags t ON pt.tag_id = t.id
+        WHERE t.slug = #{tagSlug}
+          AND p.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        ORDER BY p.published_at DESC, p.created_at DESC
+    </select>
+
+    <select id="searchByKeyword" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        WHERE p.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+          AND (
+              p.title   LIKE CONCAT('%', #{keyword}, '%')
+           OR p.summary LIKE CONCAT('%', #{keyword}, '%')
+          )
+        ORDER BY p.published_at DESC, p.created_at DESC
+    </select>
+
+    <select id="findAllForAdmin" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        <where>
+            <if test="status != null">
+                p.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+            </if>
+        </where>
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- ==================== 存在性检查 ==================== -->
+    <select id="existsBySlug" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM posts WHERE slug = #{slug}
+    </select>
+
+    <!-- ==================== 浏览数 ==================== -->
+    <update id="incrementViewCount">
+        UPDATE posts SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- ==================== 统计 ==================== -->
+    <select id="count" resultType="long">
+        SELECT COUNT(1) FROM posts
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT COUNT(1) FROM posts
+        WHERE status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+    </select>
+
+    <select id="countByAuthorId" resultType="long">
+        SELECT COUNT(1) FROM posts WHERE author_id = #{authorId}
+    </select>
+
+    <select id="sumViewCount" resultType="long">
+        SELECT COALESCE(SUM(view_count), 0) FROM posts
+    </select>
+
+</mapper>
