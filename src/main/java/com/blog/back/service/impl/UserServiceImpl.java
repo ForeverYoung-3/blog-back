@@ -39,14 +39,24 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.findByUsername(username)
                 .orElseThrow(() -> BusinessException.notFound("用户不存在"));
 
-        if(request.getNickname() != null) {
+        if (request.getNickname() != null) {
             user.setNickname(request.getNickname());
         }
-        if (request.getBio()      != null) {
+        if (request.getBio() != null) {
             user.setBio(request.getBio());
         }
-        if (request.getAvatar()   != null) {
+        if (request.getAvatar() != null) {
             user.setAvatar(request.getAvatar());
+        }
+        // 邮箱修改：需校验新邮箱是否已被其他账号占用
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            String newEmail = request.getEmail().trim();
+            if (!newEmail.equals(user.getEmail())) {
+                if (userMapper.existsByEmail(newEmail)) {
+                    throw BusinessException.conflict("该邮箱已被其他账号使用");
+                }
+                user.setEmail(newEmail);
+            }
         }
         // 普通用户不能修改 role 和 enabled
 
