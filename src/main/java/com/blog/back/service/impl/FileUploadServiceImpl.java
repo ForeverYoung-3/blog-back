@@ -65,8 +65,8 @@ public class FileUploadServiceImpl implements FileUploadService {
             throw BusinessException.badRequest("文件上传失败，请稍后重试");
         }
 
-        // 4. 拼接公开访问 URL
-        String url = minioConfig.getEndpoint().stripTrailing()
+        // 4. 拼接公开访问 URL（使用对外地址，而非容器内部地址）
+        String url = minioConfig.getPublicEndpointOrDefault().stripTrailing()
                 + "/" + minioConfig.getBucketName()
                 + "/" + objectName;
 

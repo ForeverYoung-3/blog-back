@@ -17,9 +17,14 @@ import org.springframework.context.annotation.Configuration;
 public class MinioConfig {
 
     private String endpoint;
+    private String publicEndpoint; // 对外访问地址，用于生成图片 URL
     private String accessKey;
     private String secretKey;
     private String bucketName;
+
+    public String getPublicEndpointOrDefault() {
+        return (publicEndpoint != null && !publicEndpoint.isBlank()) ? publicEndpoint : endpoint;
+    }
 
     @Bean
     public MinioClient minioClient() {
