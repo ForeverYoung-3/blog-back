@@ -150,6 +150,14 @@
         ORDER BY p.created_at DESC
     </select>
 
+    <select id="findRecentForAdmin" resultMap="PostResultMap">
+        SELECT <include refid="Select_List_Columns"/>
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        ORDER BY p.created_at DESC
+        LIMIT #{limit}
+    </select>
+
     <!-- ==================== 存在性检查 ==================== -->
     <select id="existsBySlug" resultType="boolean">
         SELECT COUNT(1) > 0 FROM posts WHERE slug = #{slug}

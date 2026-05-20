@@ -47,6 +47,9 @@ public interface PostMapper {
     /** 管理员查询所有文章（可按状态过滤，null 表示全部） */
     List<Post> findAllForAdmin(@Param("status") PostStatus status);
 
+    /** 查询最近 N 篇文章（按创建时间倒序，管理员用） */
+    List<Post> findRecentForAdmin(@Param("limit") int limit);
+
     /** slug 是否存在 */
     boolean existsBySlug(@Param("slug") String slug);
 

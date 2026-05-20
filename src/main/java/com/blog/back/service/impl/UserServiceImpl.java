@@ -128,6 +128,26 @@ public class UserServiceImpl implements UserService {
         stats.put("draftPosts",     postMapper.countByStatus(PostStatus.DRAFT));
         stats.put("totalTags",      tagMapper.count());
         stats.put("totalViews",     postMapper.sumViewCount());
+
+        // 最近 5 篇文章（含任意状态，按创建时间倒序）
+        List<Map<String, Object>> recentPosts = postMapper.findRecentForAdmin(5)
+                .stream()
+                .map(p -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id",          p.getId());
+                    item.put("title",       p.getTitle());
+                    item.put("slug",        p.getSlug());
+                    item.put("status",      p.getStatus() != null ? p.getStatus().name() : "DRAFT");
+                    item.put("viewCount",   p.getViewCount());
+                    item.put("publishedAt", p.getPublishedAt() != null
+                            ? p.getPublishedAt().toLocalDate().toString() : null);
+                    item.put("createdAt",   p.getCreatedAt() != null
+                            ? p.getCreatedAt().toLocalDate().toString() : null);
+                    return item;
+                })
+                .collect(Collectors.toList());
+        stats.put("recentPosts", recentPosts);
+
         return stats;
     }
 
