@@ -1,6 +1,7 @@
 package com.blog.back.controller;
 
 import com.blog.back.dto.ApiResponse;
+import com.blog.back.dto.user.ChangePasswordRequest;
 import com.blog.back.dto.user.UpdateUserRequest;
 import com.blog.back.dto.user.UserResponse;
 import com.blog.back.service.UserService;
@@ -36,6 +37,16 @@ public class UserController {
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.success("个人信息更新成功",
                 userService.updateCurrentUser(userDetails.getUsername(), request)));
+    }
+
+    /** 修改当前用户密码 */
+    @PutMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("密码修改成功", null));
     }
 
     /** 公开的用户主页 */

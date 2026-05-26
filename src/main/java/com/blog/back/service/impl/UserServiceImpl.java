@@ -1,5 +1,6 @@
 package com.blog.back.service.impl;
 
+import com.blog.back.dto.user.ChangePasswordRequest;
 import com.blog.back.dto.user.UpdateUserRequest;
 import com.blog.back.dto.user.UserResponse;
 import com.blog.back.entity.User;
@@ -10,6 +11,7 @@ import com.blog.back.mapper.TagMapper;
 import com.blog.back.mapper.UserMapper;
 import com.blog.back.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PostMapper postMapper;
     private final TagMapper tagMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse getCurrentUser(String username) {
@@ -62,6 +65,22 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateById(user);
         return toResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        User user = userMapper.findByUsername(username)
+                .orElseThrow(() -> BusinessException.notFound("用户不存在"));
+
+        // 验证当前密码是否正确
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw BusinessException.badRequest("当前密码不正确");
+        }
+
+        // 加密新密码并更新
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userMapper.updateById(user);
     }
 
     @Override

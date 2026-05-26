@@ -1,5 +1,6 @@
 package com.blog.back.service;
 
+import com.blog.back.dto.user.ChangePasswordRequest;
 import com.blog.back.dto.user.UpdateUserRequest;
 import com.blog.back.dto.user.UserResponse;
 
@@ -13,6 +14,9 @@ public interface UserService {
 
     /** 当前用户更新自己的资料 */
     UserResponse updateCurrentUser(String username, UpdateUserRequest request);
+
+    /** 当前用户修改密码 */
+    void changePassword(String username, ChangePasswordRequest request);
 
     /** 公开的用户主页信息 */
     UserResponse getUserProfile(Long id);
