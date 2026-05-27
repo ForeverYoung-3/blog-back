@@ -41,6 +41,7 @@
             <if test="email     != null">email     = #{email},</if>
             <if test="avatar    != null">avatar    = #{avatar},</if>
             <if test="bio       != null">bio       = #{bio},</if>
+            <if test="password  != null">password  = #{password},</if>
             <if test="role      != null">role      = #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
             <if test="enabled   != null">enabled   = #{enabled},</if>
             updated_at = NOW()
