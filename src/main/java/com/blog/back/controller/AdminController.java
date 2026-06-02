@@ -5,6 +5,7 @@ import com.blog.back.dto.post.PostResponse;
 import com.blog.back.dto.user.UpdateUserRequest;
 import com.blog.back.dto.user.UserResponse;
 import com.blog.back.enums.PostStatus;
+import com.blog.back.enums.UserStatus;
 import com.blog.back.service.PostService;
 import com.blog.back.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,23 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("用户删除成功", null));
+    }
+
+    @PostMapping("/users/{id}/approve")
+    public ResponseEntity<ApiResponse<UserResponse>> approveUser(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("审核通过",
+                userService.updateUserStatus(id, UserStatus.ACTIVE)));
+    }
+
+    @PostMapping("/users/{id}/reject")
+    public ResponseEntity<ApiResponse<UserResponse>> rejectUser(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("已拒绝注册",
+                userService.deleteUser2(id)));
+    }
+
+    @GetMapping("/users/pending")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getPendingUsers() {
+        return ResponseEntity.ok(ApiResponse.success(userService.getUsersByStatus(UserStatus.PENDING)));
     }
 
     // ---- 文章管理 ----

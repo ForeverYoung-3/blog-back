@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     bio         VARCHAR(500) DEFAULT NULL,
     role        VARCHAR(20)  NOT NULL DEFAULT 'ROLE_VIEWER',
     enabled     TINYINT      NOT NULL DEFAULT 1,
+    status      VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
     created_at  DATETIME     NOT NULL,
     updated_at  DATETIME     NOT NULL,
     PRIMARY KEY (id),
@@ -78,7 +79,7 @@ CREATE TABLE IF NOT EXISTS post_tags (
 
 -- 初始管理员账号（密码明文: admin123，已 BCrypt 加密）
 -- 注意：此 hash 仅为示例，建议通过注册接口创建真实账号
-INSERT IGNORE INTO users (username, email, password, nickname, role, enabled, created_at, updated_at)
+INSERT IGNORE INTO users (username, email, password, nickname, role, enabled, status, created_at, updated_at)
 VALUES (
     'admin',
     'admin@blog.com',
@@ -86,6 +87,7 @@ VALUES (
     '管理员',
     'ROLE_ADMIN',
     1,
+    'ACTIVE',
     NOW(),
     NOW()
 );

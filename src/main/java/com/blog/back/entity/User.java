@@ -1,6 +1,7 @@
 package com.blog.back.entity;
 
 import com.blog.back.enums.Role;
+import com.blog.back.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,9 @@ public class User {
 
     @Builder.Default
     private Boolean enabled = true;
+
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

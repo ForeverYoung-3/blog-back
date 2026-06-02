@@ -1,6 +1,7 @@
 package com.blog.back.mapper;
 
 import com.blog.back.entity.User;
+import com.blog.back.enums.UserStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,6 +31,9 @@ public interface UserMapper {
 
     /** 查询所有用户（按创建时间倒序） */
     List<User> findAll();
+
+    /** 按状态查询用户列表 */
+    List<User> findByStatus(@Param("status") UserStatus status);
 
     /** 用户名是否存在 */
     boolean existsByUsername(@Param("username") String username);

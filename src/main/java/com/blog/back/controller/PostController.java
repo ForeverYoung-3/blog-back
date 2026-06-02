@@ -37,13 +37,19 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(postService.getPostById(id)));
+    public ResponseEntity<ApiResponse<PostResponse>> getPostById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(ApiResponse.success(postService.getPostById(id, username)));
     }
 
     @GetMapping("/slug/{slug}")
-    public ResponseEntity<ApiResponse<PostResponse>> getPostBySlug(@PathVariable String slug) {
-        return ResponseEntity.ok(ApiResponse.success(postService.getPostBySlug(slug)));
+    public ResponseEntity<ApiResponse<PostResponse>> getPostBySlug(
+            @PathVariable String slug,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(ApiResponse.success(postService.getPostBySlug(slug, username)));
     }
 
     @GetMapping("/tag/{tagSlug}")

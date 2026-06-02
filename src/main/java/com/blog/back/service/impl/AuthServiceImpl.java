@@ -5,6 +5,7 @@ import com.blog.back.dto.auth.LoginRequest;
 import com.blog.back.dto.auth.RegisterRequest;
 import com.blog.back.entity.User;
 import com.blog.back.enums.Role;
+import com.blog.back.enums.UserStatus;
 import com.blog.back.exception.BusinessException;
 import com.blog.back.mapper.UserMapper;
 import com.blog.back.security.JwtUtil;
@@ -47,8 +48,10 @@ public class AuthServiceImpl implements AuthService {
             throw BusinessException.conflict("邮箱已被注册");
         }
 
-        // 第一个注册的用户自动成为管理员
-        Role role = userMapper.count() == 0 ? Role.ROLE_ADMIN : Role.ROLE_VIEWER;
+        // 第一个注册的用户自动成为管理员，直接激活；其他用户默认待审核
+        boolean isFirstUser = userMapper.count() == 0;
+        Role role = isFirstUser ? Role.ROLE_ADMIN : Role.ROLE_VIEWER;
+        UserStatus status = isFirstUser ? UserStatus.ACTIVE : UserStatus.PENDING;
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -57,9 +60,25 @@ public class AuthServiceImpl implements AuthService {
                 .nickname(request.getNickname() != null ? request.getNickname() : request.getUsername())
                 .role(role)
                 .enabled(true)
+                .status(status)
                 .build();
 
         userMapper.insert(user);  // insert 后 user.id 已被回填
+
+        if (status == UserStatus.PENDING) {
+            // 待审核用户不返回 token，前端根据 accessToken 为空判断
+            return AuthResponse.builder()
+                    .accessToken(null)
+                    .tokenType(null)
+                    .userId(user.getId())
+                    .username(user.getUsername())
+                    .nickname(user.getNickname())
+                    .avatar(user.getAvatar())
+                    .role(user.getRole().name())
+                    .status(status.name())
+                    .build();
+        }
+
         String token = jwtUtil.generateToken(user.getUsername());
         return buildAuthResponse(user, token);
     }
@@ -73,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
                 .nickname(user.getNickname())
                 .avatar(user.getAvatar())
                 .role(user.getRole().name())
+                .status(user.getStatus() != null ? user.getStatus().name() : "ACTIVE")
                 .build();
     }
 }

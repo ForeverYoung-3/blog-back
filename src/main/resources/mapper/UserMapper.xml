@@ -16,21 +16,25 @@
         <result column="role"       property="role"
                 typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
         <result column="enabled"    property="enabled"/>
+        <result column="status"     property="status"
+                typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <!-- ==================== 公共列片段 ==================== -->
     <sql id="Base_Column_List">
-        id, username, email, password, nickname, avatar, bio, role, enabled, created_at, updated_at
+        id, username, email, password, nickname, avatar, bio, role, enabled, status, created_at, updated_at
     </sql>
 
     <!-- ==================== 插入 ==================== -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users (username, email, password, nickname, avatar, bio, role, enabled, created_at, updated_at)
+        INSERT INTO users (username, email, password, nickname, avatar, bio, role, enabled, status, created_at, updated_at)
         VALUES (#{username}, #{email}, #{password}, #{nickname}, #{avatar}, #{bio},
                 #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
-                #{enabled}, NOW(), NOW())
+                #{enabled},
+                #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                NOW(), NOW())
     </insert>
 
     <!-- ==================== 更新（只更新非 null 字段） ==================== -->
@@ -44,6 +48,7 @@
             <if test="password  != null">password  = #{password},</if>
             <if test="role      != null">role      = #{role, typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
             <if test="enabled   != null">enabled   = #{enabled},</if>
+            <if test="status    != null">status    = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
             updated_at = NOW()
         </set>
         WHERE id = #{id}
@@ -79,6 +84,13 @@
     <select id="findAll" resultMap="UserResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM users
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByStatus" resultMap="UserResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
         ORDER BY created_at DESC
     </select>
 

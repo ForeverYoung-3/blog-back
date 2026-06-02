@@ -1,6 +1,7 @@
 package com.blog.back.dto.user;
 
 import com.blog.back.enums.Role;
+import com.blog.back.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class UserResponse {
     private String bio;
     private Role role;
     private Boolean enabled;
+    private UserStatus status;
     private Long postCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

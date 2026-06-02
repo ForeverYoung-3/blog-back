@@ -17,4 +17,5 @@ public class AuthResponse {
     private String nickname;
     private String avatar;
     private String role;
+    private String status;  // ACTIVE / PENDING
 }

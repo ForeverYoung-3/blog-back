@@ -5,6 +5,7 @@ import com.blog.back.dto.user.UpdateUserRequest;
 import com.blog.back.dto.user.UserResponse;
 import com.blog.back.entity.User;
 import com.blog.back.enums.PostStatus;
+import com.blog.back.enums.UserStatus;
 import com.blog.back.exception.BusinessException;
 import com.blog.back.mapper.PostMapper;
 import com.blog.back.mapper.TagMapper;
@@ -139,6 +140,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public UserResponse deleteUser2(Long id) {
+        userMapper.findById(id)
+                .orElseThrow(() -> BusinessException.notFound("用户不存在"));
+        userMapper.deleteById(id);
+        return null;
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateUserStatus(Long id, UserStatus status) {
+        User user = userMapper.findById(id)
+                .orElseThrow(() -> BusinessException.notFound("用户不存在"));
+        user.setStatus(status);
+        userMapper.updateById(user);
+        return toResponse(user);
+    }
+
+    @Override
+    public List<UserResponse> getUsersByStatus(UserStatus status) {
+        return userMapper.findByStatus(status).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalUsers",     userMapper.count());
@@ -191,6 +218,7 @@ public class UserServiceImpl implements UserService {
                 .bio(user.getBio())
                 .role(user.getRole())
                 .enabled(user.getEnabled())
+                .status(user.getStatus())
                 .postCount(postMapper.countByAuthorId(user.getId()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

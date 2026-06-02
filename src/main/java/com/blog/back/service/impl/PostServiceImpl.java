@@ -134,8 +134,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponse getPostById(Long id) {
+    public PostResponse getPostById(Long id, String username) {
         Post post = getPost(id);
+        checkHiddenAccess(post, username);
         postMapper.incrementViewCount(id);
         User author = userMapper.findById(post.getAuthorId())
                 .orElseThrow(() -> BusinessException.notFound("作者不存在"));
@@ -144,9 +145,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponse getPostBySlug(String slug) {
+    public PostResponse getPostBySlug(String slug, String username) {
         Post post = postMapper.findBySlug(slug)
                 .orElseThrow(() -> BusinessException.notFound("文章不存在"));
+        checkHiddenAccess(post, username);
         postMapper.incrementViewCount(post.getId());
         User author = userMapper.findById(post.getAuthorId())
                 .orElseThrow(() -> BusinessException.notFound("作者不存在"));
@@ -238,6 +240,19 @@ public class PostServiceImpl implements PostService {
     private void checkOwnerOrAdmin(Post post, User user) {
         if (!post.getAuthorId().equals(user.getId()) && user.getRole() != Role.ROLE_ADMIN) {
             throw BusinessException.forbidden("无权操作此文章");
+        }
+    }
+
+    /**
+     * HIDDEN 文章仅管理员可见；匿名或普通用户访问时抛 404（不暴露文章存在）
+     */
+    private void checkHiddenAccess(Post post, String username) {
+        if (post.getStatus() != PostStatus.HIDDEN) return;
+        if (username == null) throw BusinessException.notFound("文章不存在");
+        User user = userMapper.findByUsername(username)
+                .orElseThrow(() -> BusinessException.notFound("文章不存在"));
+        if (user.getRole() != Role.ROLE_ADMIN) {
+            throw BusinessException.notFound("文章不存在");
         }
     }
 

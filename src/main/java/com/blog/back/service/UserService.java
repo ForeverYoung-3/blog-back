@@ -3,6 +3,7 @@ package com.blog.back.service;
 import com.blog.back.dto.user.ChangePasswordRequest;
 import com.blog.back.dto.user.UpdateUserRequest;
 import com.blog.back.dto.user.UserResponse;
+import com.blog.back.enums.UserStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,15 @@ public interface UserService {
 
     /** 删除用户 */
     void deleteUser(Long id);
+
+    /** 删除用户（返回 null 的包装，用于 reject 接口） */
+    UserResponse deleteUser2(Long id);
+
+    /** 更新用户审核状态 */
+    UserResponse updateUserStatus(Long id, UserStatus status);
+
+    /** 按审核状态查询用户列表 */
+    List<UserResponse> getUsersByStatus(UserStatus status);
 
     /** 统计概览数据（管理员用，含用户数等敏感字段） */
     Map<String, Object> getStats();
