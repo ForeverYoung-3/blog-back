@@ -55,6 +55,10 @@ jwt:
   expiration: 86400000
   refresh-expiration: 604800000
 
+# 文章 PDF 备份配置
+backup:
+  pdf-dir: ${BACKUP_PDF_DIR:/data/blog-backup/pdf}
+
 # Logging
 logging:
   level:
